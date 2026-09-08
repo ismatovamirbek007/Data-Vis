@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Analytics — Тест</title>
+<style>
+  :root{
+    --bg:#0f1220;
+    --card:#171b2e;
+    --text:#eef0fb;
+    --muted:#9aa0c3;
+    --accent:#6c7dff;
+    --green:#22c55e;
+    --green-bg:#123a24;
+    --red:#ef4444;
+    --red-bg:#3a1212;
+    --border:#2a2f4a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:linear-gradient(160deg,#0f1220,#171b34);
+    color:var(--text);
+    min-height:100vh;
+    padding:24px 12px;
+  }
+  .wrap{max-width:700px;margin:0 auto;}
+  h1{font-size:1.4rem;text-align:center;margin-bottom:4px;}
+  .sub{text-align:center;color:var(--muted);font-size:.9rem;margin-bottom:20px;}
+  .progress-bar{
+    height:8px;background:var(--border);border-radius:6px;overflow:hidden;margin-bottom:18px;
+  }
+  .progress-fill{
+    height:100%;background:linear-gradient(90deg,var(--accent),#9b8dff);
+    width:0%;transition:width .3s ease;
+  }
+  .meta{
+    display:flex;justify-content:space-between;color:var(--muted);
+    font-size:.85rem;margin-bottom:10px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:22px;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  .question{
+    font-size:1.05rem;
+    line-height:1.5;
+    margin-bottom:18px;
+    white-space:pre-wrap;
+  }
+  .options{display:flex;flex-direction:column;gap:10px;}
+  .opt{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    text-align:left;
+    padding:12px 14px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:#1e2340;
+    color:var(--text);
+    font-size:.97rem;
+    cursor:pointer;
+    transition:transform .1s ease, background .2s ease, border-color .2s ease;
+  }
+  .opt:hover:not(.disabled){
+    border-color:var(--accent);
+    transform:translateY(-1px);
+  }
+  .opt .letter{
+    width:26px;height:26px;flex:0 0 26px;
+    border-radius:50%;
+    background:var(--border);
+    display:flex;align-items:center;justify-content:center;
+    font-size:.8rem;font-weight:700;
+  }
+  .opt.correct{
+    background:var(--green-bg);
+    border-color:var(--green);
+    color:#c9ffd8;
+  }
+  .opt.correct .letter{background:var(--green);color:#062b15;}
+  .opt.incorrect{
+    background:var(--red-bg);
+    border-color:var(--red);
+    color:#ffd6d6;
+  }
+  .opt.incorrect .letter{background:var(--red);color:#3a0808;}
+  .opt.disabled{cursor:default;}
+  .opt.dim{opacity:.45;}
+
+  .feedback{
+    margin-top:14px;
+    font-size:.9rem;
+    font-weight:600;
+    min-height:22px;
+  }
+  .feedback.ok{color:var(--green);}
+  .feedback.bad{color:var(--red);}
+
+  .footer-row{
+    display:flex;justify-content:flex-end;margin-top:18px;
+  }
+  .btn{
+    appearance:none;border:none;
+    background:var(--accent);
+    color:#fff;
+    padding:11px 22px;
+    border-radius:10px;
+    font-size:.95rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:opacity .2s;
+  }
+  .btn:disabled{opacity:.35;cursor:not-allowed;}
+  .btn:hover:not(:disabled){opacity:.9;}
+  .btn.secondary{background:#2a2f4a;}
+
+  .result{
+    text-align:center;
+  }
+  .result .score{
+    font-size:2.6rem;font-weight:800;
+    margin:6px 0;
+    background:linear-gradient(90deg,var(--accent),#9b8dff);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .result .pct{
+    font-size:1.2rem;color:var(--muted);margin-bottom:18px;
+  }
+  .result-msg{
+    font-size:1rem;margin-bottom:22px;
+  }
+  .review-list{
+    text-align:left;
+    max-height:340px;
+    overflow-y:auto;
+    margin:18px 0;
+    border-top:1px solid var(--border);
+    padding-top:12px;
+  }
+  .review-item{
+    padding:10px 0;
+    border-bottom:1px solid var(--border);
+    font-size:.85rem;
+  }
+  .review-item .q{color:var(--muted);margin-bottom:4px;}
+  .review-item .a-ok{color:var(--green);}
+  .review-item .a-bad{color:var(--red);}
+  .badge{
+    display:inline-block;
+    padding:2px 8px;
+    border-radius:20px;
+    font-size:.7rem;
+    font-weight:700;
+    margin-right:6px;
+  }
+  .badge.ok{background:var(--green-bg);color:var(--green);}
+  .badge.bad{background:var(--red-bg);color:var(--red);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Data Analytics — Тест</h1>
+  <div class="sub">72 вопроса с вариантами ответа</div>
+
+  <div id="quizScreen">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="meta">
+      <span id="qCounter">Вопрос 1 / 72</span>
+      <span id="scoreCounter">Верно: 0</span>
+    </div>
+    <div class="card">
+      <div class="question" id="questionText"></div>
+      <div class="options" id="optionsList"></div>
+      <div class="feedback" id="feedback"></div>
+      <div class="footer-row">
+        <button class="btn" id="nextBtn" disabled>Далее →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="resultScreen" style="display:none;">
+    <div class="card result">
+      <div class="sub" style="margin-bottom:0;">Результат</div>
+      <div class="score" id="scoreText">0 / 72</div>
+      <div class="pct" id="pctText">0%</div>
+      <div class="result-msg" id="resultMsg"></div>
+      <div class="review-list" id="reviewList"></div>
+      <button class="btn secondary" id="restartBtn">↻ Пройти заново</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LETTERS = ["A","B","C","D"];
+
+// question, options[A,B,C,D], correctIndex (0-based)
+const QUESTIONS = [
+["What is a major limitation of data mining?",["It can integrate data from multiple sources","It supports forecasting and prediction","It requires high-quality and consistent data","It reduces decision-making"],2],
+["In finance, data mining is most used for:",["Weather forecasting","Credit scoring and fraud detection","Climate modeling","Student performance analysis"],1],
+["Which of the following is an application of data mining in healthcare?",["Customer segmentation","Disease prediction and drug discovery","Stock market analysis","Crime detection"],1],
+["Data coming in different forms such as text, images, videos, and databases refers to:",["Volume","Velocity","Variety","Veracity"],2],
+["Which data characteristic focuses on accuracy, reliability, and trustworthiness?",["Velocity","Variety","Veracity","Volume"],2],
+["A bank analyzing millions of daily transactions is primarily dealing with which data characteristic?",["Variety","Volume","Veracity","Velocity"],1],
+["Stock market tickers and cryptocurrency trading platforms that update every second reflect:",["Veracity","Velocity","Volume","Variety"],1],
+["Which of the following BEST shows the combined effect of the 4 Vs?",["Weather forecasting using real-time sensor data","Sorting small Excel files on a laptop","Managing a student attendance sheet","Printing a simple bar graph"],0],
+["Predictive analytics is mainly used for:",["Storing raw data","Understanding past performance","Forecasting future outcomes","Cleaning inconsistent data"],2],
+["Which of the following industries uses data analytics for fraud detection?",["Finance and Banking","Education","Agriculture","Sports"],0],
+["In Excel, the column headings are represented by:",["Numbers","Letters","Symbols","None of the above"],1],
+["Which bar shows the contents of the active cell in Excel?",["Status bar","Title bar","Formula bar","Menu bar"],2],
+["Which feature in Excel is used to quickly fill values in adjacent cells based on a pattern?",["AutoSum","AutoCorrect","AutoFill","AutoFormat"],2],
+["The small box at the bottom-right corner of the active cell is known as:",["End box","Drag handle","Fill handle","Pointer"],2],
+["Which of the following tabs in the Ribbon contains the \u201cFont\u201d group?",["Insert","Home","Data","Review"],1],
+["Which element of the Excel window displays the name of the workbook?",["Status Bar","Formula Bar","Title Bar","Ribbon"],2],
+["Which of the following is NOT a component of the Excel interface?",["Ribbon","Status Bar","Formula Bar","Slide Master"],3],
+["What is the default number of worksheets in a new Excel 2016 workbook?",["1","2","3","5"],0],
+["Which SQL function is used to calculate the total of values in a column?",["COUNT()","AVG()","SUM()","TOTAL()"],2],
+["What information does the Pandas describe() function provide?",["Data types and memory usage","Missing value positions","Summary statistics of numerical data","Column names only"],2],
+["Which Pandas function is used to remove rows with missing values?",["fillna()","dropna()","replace()","clean()"],1],
+["Which function is used to remove extra spaces from text data?",["CLEAN()","TRIM()","SPACE()","LEFT()"],1],
+["Why is data validation important in data wrangling?",["It improves chart design","It prevents incorrect data entry","It increases file size","It removes formulas"],1],
+["Which function is best suited to replace missing/error values with a default value?",["IF()","ISBLANK()","IFERROR()","VLOOKUP()"],2],
+["Which spreadsheet feature is most useful to identify outliers in numerical data?",["Remove Duplicates","Conditional Formatting","Text to Columns","Data Validation"],1],
+["Cognos Analytics is primarily a tool for:",["Software development","Business Intelligence and data analytics","Network security","Database design"],1],
+["Which Cognos component is mainly used to create dashboards and reports?",["Framework Manager","Cognos Connection","Cognos Analytics Studio","Query Studio"],2],
+["How does metadata represent in Cognos Analytics?",["Raw transactional data","Data visualization rules","Information about data structure and relationships","User login information"],2],
+["Predictive analytics primarily aims to:",["Describe past data trends","Predict future outcomes based on historical data","Store data securely","Visualize dashboards"],1],
+["What is the main purpose of clustering in data analysis?",["Predict future values","Group similar data points together","Clean data","Visualize trends"],1],
+["In K-Means clustering, what does \u201cK\u201d represent?",["Number of data points","Number of clusters","Number of iterations","Number of features"],1],
+["Which of the following is NOT a component of a time series?",["Trend","Seasonality","Cyclic variation","Classification"],3],
+["What does DASH primarily stand for in data analytics?",["Data Access System Hub","Data Analytics System for Health","Data Application Software Handler","Digital Analysis Support Hub"],0],
+["Narrative techniques are mainly used to:",["Store data","Write programming code","Tell a story effectively","Perform calculations"],2],
+["The primary purpose of dashboard design is to:",["Store large datasets","Display raw data tables","Communicate insights effectively","Perform complex calculations"],2],
+["Data refresh is the process of:",["Changing chart colors","Reloading updated data into visualizations","Exporting dashboards","Formatting visuals"],1],
+["What is a major limitation of data mining?",["It can integrate data from multiple sources","It supports forecasting and prediction","It requires high-quality and consistent data","It reduces decision-making efficiency"],2],
+["Which of the following is the strength of data mining?",["High data quality is not required","Reveals hidden patterns and trends","Eliminates all ethical concerns","Guarantees 100% accurate predictions"],1],
+["Which of the following is an application of data mining in healthcare?",["Customer segmentation","Disease prediction and drug discovery","Stock market analysis","Crime detection"],1],
+["In finance, data mining is most used for:",["Weather forecasting","Credit scoring and fraud detection","Climate modelling","Student performance analysis"],1],
+["Which of the following represents an ethical limitation of data mining?",["Overfitting","Privacy and security issues","Data integration","Prediction and forecasting"],1],
+["Data coming in different forms such as text, images, videos, and databases refers to:",["Volume","Velocity","Variety","Veracity"],2],
+["Real-time streaming data from sensors or social media mainly highlights which characteristic?",["Veracity","Velocity","Variety","Volume"],1],
+["In big data analytics, the \u201c4 Vs\u201d framework does NOT include:",["Volume","Value","Variety","Velocity"],1],
+["Predictive analytics is mainly used for:",["Storing raw data","Understanding past performance","Forecasting future outcomes","Cleaning inconsistent data"],2],
+["Prescriptive analytics differs from predictive analytics because it:",["Explains why something happened","Suggests actions to achieve desired outcomes","Only summarizes past events","Focuses only on visualization"],1],
+["Which of the following industries uses data analytics for fraud detection?",["Finance and Banking","Education","Agriculture","Sports"],0],
+["Which of the following is the intersection of a row and a column in Excel?",["Field","Cell","Table","Worksheet"],1],
+["In Excel, the column headings are represented by:",["Numbers","Letters","Symbols","None of the above"],1],
+["Which bar shows the contents of the active cell in Excel?",["Status bar","Title bar","Formula bar","Menu bar"],2],
+["In Excel, the Name Box displays:",["The current worksheet name","The cell reference of the active cell","The formula applied in the cell","The range of selected cells"],1],
+["Which feature in Excel is used to quickly fill values in adjacent cells based on a pattern?",["AutoSum","AutoCorrect","AutoFill","AutoFormat"],2],
+["In Excel, the horizontal line of cells is called:",["Column","Row","Cell range","Table"],1],
+["The small box at the bottom-right corner of the active cell is known as:",["End box","Drag handle","Fill handle","Pointer"],2],
+["Which SQL function is used to calculate the total of values in a column?",["COUNT()","AVG()","SUM()","TOTAL()"],2],
+["What information does the Pandas describe() function provide?",["Data types and memory usage","Missing value positions","Summary statistics of numerical data","Column names only"],2],
+["Which Pandas function is used to remove rows with missing values?",["fillna()","dropna()","replace()","clean()"],1],
+["Which function is used to remove extra spaces from text data?",["CLEAN()","TRIM()","SPACE()","LEFT()"],1],
+["Why is data validation important in data wrangling?",["It improves chart design","It prevents incorrect data entry","It increases file size","It removes formulas"],1],
+["Which function is best suited to replace missing/error values with a default value?",["IF()","ISBLANK()","IFERROR()","VLOOKUP()"],2],
+["Which spreadsheet feature is most useful to identify outliers in numerical data?",["Remove Duplicates","Conditional Formatting","Text to Columns","Data Validation"],1],
+["Cognos Analytics is primarily a tool for:",["Software development","Business Intelligence and data analytics","Network security","Database design"],1],
+["Which Cognos component is mainly used to create dashboards and reports?",["Framework Manager","Cognos Connection","Cognos Analytics Studio","Query Studio"],2],
+["How does metadata represent in Cognos Analytics?",["Raw transactional data","Data visualization rules","Information about data structure and relationships","User login information"],2],
+["Predictive analytics primarily aims to:",["Describe past data trends","Predict future outcomes based on historical data","Store data securely","Visualize dashboards"],1],
+["What is the main purpose of clustering in data analysis?",["Predict future values","Group similar data points together","Clean data","Visualize trends"],1],
+["In K-Means clustering, what does \u201cK\u201d represent?",["Number of data points","Number of clusters","Number of iterations","Number of features"],1],
+["Which of the following is NOT a component of a time series?",["Trend","Seasonality","Cyclic variation","Classification"],3],
+["What does DASH primarily stand for in data analytics?",["Data Access System Hub","Data Analytics System for Health","Data Application Software Handler","Digital Analysis Support Hub"],0],
+["Narrative techniques are mainly used to:",["Store data","Write programming code","Tell a story effectively","Perform calculations"],2],
+["The primary purpose of dashboard design is to:",["Store large datasets","Display raw data tables","Communicate insights effectively","Perform complex calculations"],2],
+["Data refresh is the process of:",["Changing chart colors","Reloading updated data into visualizations","Exporting dashboards","Formatting visuals"],1]
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+let userAnswers = [];
+
+const questionText = document.getElementById('questionText');
+const optionsList = document.getElementById('optionsList');
+const feedback = document.getElementById('feedback');
+const nextBtn = document.getElementById('nextBtn');
+const qCounter = document.getElementById('qCounter');
+const scoreCounter = document.getElementById('scoreCounter');
+const progressFill = document.getElementById('progressFill');
+const quizScreen = document.getElementById('quizScreen');
+const resultScreen = document.getElementById('resultScreen');
+
+function renderQuestion(){
+  answered = false;
+  nextBtn.disabled = true;
+  feedback.textContent = '';
+  feedback.className = 'feedback';
+
+  const [qText, opts, correctIdx] = QUESTIONS[current];
+  questionText.textContent = (current+1) + '. ' + qText;
+  qCounter.textContent = `Вопрос ${current+1} / ${QUESTIONS.length}`;
+  scoreCounter.textContent = `Верно: ${score}`;
+  progressFill.style.width = (current/QUESTIONS.length*100) + '%';
+
+  optionsList.innerHTML = '';
+  opts.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.innerHTML = `<span class="letter">${LETTERS[idx]}</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => selectAnswer(idx, correctIdx, btn));
+    optionsList.appendChild(btn);
+  });
+}
+
+function selectAnswer(idx, correctIdx, btnEl){
+  if(answered) return;
+  answered = true;
+  const allBtns = optionsList.querySelectorAll('.opt');
+  const isCorrect = idx === correctIdx;
+
+  allBtns.forEach((b, i) => {
+    b.classList.add('disabled');
+    if(i === correctIdx){
+      b.classList.add('correct');
+    } else if(i === idx && !isCorrect){
+      b.classList.add('incorrect');
+    } else {
+      b.classList.add('dim');
+    }
+  });
+
+  if(isCorrect){
+    score++;
+    feedback.textContent = '🟢 Верно!';
+    feedback.className = 'feedback ok';
+  } else {
+    feedback.textContent = `🔴 Неверно. Правильный ответ: ${LETTERS[correctIdx]}) ${QUESTIONS[current][1][correctIdx]}`;
+    feedback.className = 'feedback bad';
+  }
+
+  userAnswers.push({q: QUESTIONS[current][0], userIdx: idx, correctIdx, isCorrect, opts: QUESTIONS[current][1]});
+  scoreCounter.textContent = `Верно: ${score}`;
+  nextBtn.disabled = false;
+  nextBtn.textContent = (current === QUESTIONS.length-1) ? 'Завершить тест' : 'Далее →';
+}
+
+nextBtn.addEventListener('click', () => {
+  if(current < QUESTIONS.length - 1){
+    current++;
+    renderQuestion();
+  } else {
+    showResults();
+  }
+});
+
+function showResults(){
+  progressFill.style.width = '100%';
+  quizScreen.style.display = 'none';
+  resultScreen.style.display = 'block';
+
+  const total = QUESTIONS.length;
+  const pct = Math.round(score/total*100);
+  document.getElementById('scoreText').textContent = `${score} / ${total}`;
+  document.getElementById('pctText').textContent = `${pct}%`;
+
+  let msg;
+  if(pct >= 90) msg = '🏆 Отличный результат!';
+  else if(pct >= 70) msg = '👍 Хороший результат!';
+  else if(pct >= 50) msg = '🙂 Неплохо, но есть куда расти.';
+  else msg = '📚 Стоит повторить материал.';
+  document.getElementById('resultMsg').textContent = msg;
+
+  const reviewList = document.getElementById('reviewList');
+  reviewList.innerHTML = '';
+  userAnswers.forEach((a, i) => {
+    const div = document.createElement('div');
+    div.className = 'review-item';
+    const badge = a.isCorrect ? '<span class="badge ok">верно</span>' : '<span class="badge bad">неверно</span>';
+    const userTxt = a.userIdx !== null ? `${LETTERS[a.userIdx]}) ${a.opts[a.userIdx]}` : '—';
+    const correctTxt = `${LETTERS[a.correctIdx]}) ${a.opts[a.correctIdx]}`;
+    div.innerHTML = `
+      <div class="q">${badge}${i+1}. ${a.q}</div>
+      <div class="${a.isCorrect ? 'a-ok' : 'a-bad'}">Ваш ответ: ${userTxt}</div>
+      ${!a.isCorrect ? `<div class="a-ok">Правильный: ${correctTxt}</div>` : ''}
+    `;
+    reviewList.appendChild(div);
+  });
+}
+
+document.getElementById('restartBtn').addEventListener('click', () => {
+  current = 0;
+  score = 0;
+  userAnswers = [];
+  resultScreen.style.display = 'none';
+  quizScreen.style.display = 'block';
+  renderQuestion();
+});
+
+renderQuestion();
+</script>
+</body>
+</html>
